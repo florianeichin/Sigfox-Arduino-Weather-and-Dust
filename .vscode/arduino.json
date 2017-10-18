@@ -1,0 +1,5 @@
+{
+    "board": "arduino:samd:mkrfox1200",
+    "sketch": "main.ino",
+    "port": "COM5"
+}
