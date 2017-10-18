@@ -1,7 +1,7 @@
 # arduino_sigfox_weather_dust
 Weather and Dust Values send to Sigfox Backend in an 15 Minute intervall.
 
-# Parts needed
+# Project Parts
 ## Board
 Arduino MKR Fox 1200
 https://store.arduino.cc/arduino-mkrfox1200
@@ -16,6 +16,3 @@ https://store.arduino.cc/arduino-mkrfox1200
 - BPM 85
 - Arduino Low Power
 - Sigfox MKR
-
-## Breakout
-![alt text](https://github.com/floei/arduino_sigfox_weather_dust/sigfoxconnection_Steckplatine.png "Breakout")
