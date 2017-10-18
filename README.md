@@ -18,5 +18,4 @@ https://store.arduino.cc/arduino-mkrfox1200
 - Sigfox MKR
 
 ## Breakout
-![alt text][logo]
-[logo]: https://github.com/floei/arduino_sigfox_weather_dust/sigfoxconnection_Steckplatine.png "Breakout"
+![alt text](https://github.com/floei/arduino_sigfox_weather_dust/sigfoxconnection_Steckplatine.png "Breakout")
