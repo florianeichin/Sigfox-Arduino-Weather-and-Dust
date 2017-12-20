@@ -1,4 +1,4 @@
-# arduino_sigfox_weather_dust
+# Arduino Sigfox Weather 
 Weather and Dust Values send to Sigfox Backend in an 15 Minute intervall.
 
 # Project Parts
