@@ -13,6 +13,6 @@ https://store.arduino.cc/arduino-mkrfox1200
 
 ## Libraries
 - DHT Sensor Library
-- BPM 85
+- BMP85
 - Arduino Low Power
 - Sigfox MKR
