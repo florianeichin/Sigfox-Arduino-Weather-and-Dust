@@ -21,7 +21,7 @@ https://store.arduino.cc/arduino-mkrfox1200
 
 ## Data Encoding
 3 x 4 ASCII Characters
-1. Humidity in form ABCD which converts to AB,CD % relative humidity
+1. Humidity in form ABCD which converts to ABC,D % relative humidity
 2. Temperature in form ABCD which conerts to BC,D °C A=0 is a positive and A=1 a negative Value
-3. Dust density in form ABCD which converts to AB,CD mg/m³ density of dust
+3. Dust density in form ABCD which converts to ABC,D mg/m³ density of dust
 
