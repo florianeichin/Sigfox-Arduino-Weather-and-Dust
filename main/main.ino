@@ -136,8 +136,7 @@ uint16_t convertoFloatToUInt16(float value, long max, long min = 0) {
 
 String getWeather(boolean shrt){
   char status;
-  double T,P,p0,a;
-  if(shrt==false){ // Read Pressure only if needed
+  double T,P,p0,a, hPa;
     status = pressure.startTemperature();
     if (status != 0){
       delay(status);
@@ -149,18 +148,15 @@ String getWeather(boolean shrt){
           status = pressure.getPressure(P,T);
           if (status != 0){
             p0 = pressure.sealevel(P,ALTITUDE);
+            hPa = p0/100;
           }
         }
       }
     }
-  }
-  
-
+    
   
   String message = "";
-  String newMessage;
   float humidity = dht.readHumidity();
-  float temperature = dht.readTemperature();
 
   // Read Dust Sensor
   digitalWrite(iled, HIGH);
@@ -182,50 +178,35 @@ String getWeather(boolean shrt){
 
 // create short message for sigfox delivery
   if(shrt==true){ 
-    message = "";
-
-    // Humidity
-    newMessage=(int)(humidity*10);
-    if(newMessage.length()<4){ //4 Byte Padding
-      newMessage=0+newMessage;
-    }
-    message=message+ newMessage;
-
-    // Temperature
-    String sign;
-    if(temperature<0){
-      sign="1";
-    }
-    else{
-      sign="0";
-    }
-    newMessage=(int)(temperature*10);
-    if(newMessage.length()<3){
-      newMessage=0+newMessage;
-    }
-    message=message+sign+newMessage;
-    
-    // Dust Density
-    newMessage=(int)(density*10);
-    if(newMessage.length()<4){
-      newMessage=0+newMessage;
-    }
-    message=message+newMessage;
-    }
+    message = message+ Pad((int)(humidity*10)); // Humidity
+    message = message+ Pad((int)(hPa)); // Pressure
+    message = message+ Pad((int)(density*10)); // Dust Density
+  }
 
   else{ // create long message for serial output
     message = "Humidity: ";
-    message=message+humidity ;
-    message=message+" %\t Temperature: "; 
-    message=message+temperature;
-    message=message+" C\t Dust Density: ";
-    message=message+density;
-    message=message+" ug/m3\t Sealevel Pressure: ";  
-    message=message+p0;
-    message = message+" hPa, \n";
+    message = message + humidity ;
+    message = message + " %\t Pressure: "; 
+    message = message + hPa;
+    message = message + " hPa\t Dust Density: ";
+    message = message + density;
+    message = message + " ug/m3\t Sealevel Pressure: ";  
+    message = message + p0;
+    message = message + " hPa, \n";
   }
   return message;
 }
+
+// Byte Padding to 4 Byte
+string Pad(string message){
+     if(message.length()<4){
+      message=0+message;
+    } else if(message.length()>4){
+      message = message.substr(0,4)
+    }
+    return message;
+}
+
 
 int Filter(int m){
   static int flag_first = 0, _buff[10], sum;
