@@ -41,10 +41,12 @@ SFE_BMP180 pressure;
 DHT dht(DHTPIN, DHTTYPE);
 const int iled = 1;
 const int vout = 1;
-float density, voltage;
-float   adcvalue;
+
+
 volatile int alarm_source = 0;
- 
+void alarmEvent0(){
+  alarm_source = 0;
+}
 void setup() 
 {
   pinMode(iled, OUTPUT);
@@ -78,7 +80,6 @@ void setup()
     while(1); 
   }
   
-  dht.begin();
   
   if (!SigFox.begin()) {
     Serial.println("Shield error or not present!");
@@ -98,20 +99,33 @@ void setup()
 void loop() 
 {
   powerUp();
-  Serial.println(getWeather(false));
   String message = getWeather(true);
+  if (ONESHOT == true){
+    delay(2000);
+    Serial.println(getWeather(false));
+    Serial.println(message);
+  }
   powerDown();
   message.trim();
-  sendStringAndGetResponse(message);
-  if (ONESHOT == true) {
-    // spin forever, so we can test that the backend is behaving correctly
-    while (1) {}
+  for(int i =0 ; i<3;i++){
+    boolean send = sendStringAndGetResponse(message);
+    if (send == true){
+      Serial.println("sending success");
+      break;
+    }
+    Serial.println("sending again");
   }
-  LowPower.sleep(SLEEPTIME);
+  
+  if (ONESHOT == true) {
+    delay(10*1000); // wait 10 seconds
+  }else{
+    LowPower.sleep(SLEEPTIME);  
+  }
 }
 
 
 void powerUp(){
+  dht.begin();
   digitalWrite(BMPVCC,HIGH);
   digitalWrite(DHTVCC,HIGH);
   digitalWrite(DUSTVCC,HIGH);
@@ -159,13 +173,15 @@ String getWeather(boolean shrt){
   float humidity = dht.readHumidity();
 
   // Read Dust Sensor
+  float density; 
+  float voltage;
+  float adcvalue;
   digitalWrite(iled, HIGH);
   delayMicroseconds(280);
   adcvalue = analogRead(vout);
   digitalWrite(iled, LOW);
   adcvalue = Filter(adcvalue);
   voltage = (SYS_VOLTAGE / 1024.0) * adcvalue * 11.0;
-  Serial.println(voltage);
   if(voltage >= NO_DUST_VOLTAGE)
   {
     voltage -= NO_DUST_VOLTAGE;
@@ -175,12 +191,20 @@ String getWeather(boolean shrt){
     density = 0;
   }
     
-
+if (humidity != humidity){
+  humidity = 0;
+}
+if (hPa != hPa){
+  hPa = 0;
+}
+if (density != density){
+  density = 0;
+}
 // create short message for sigfox delivery
   if(shrt==true){ 
-    message = message+ Pad((int)(humidity*10)); // Humidity
-    message = message+ Pad((int)(hPa)); // Pressure
-    message = message+ Pad((int)(density*10)); // Dust Density
+    message = message + Pad((int)(humidity*10)); // Humidity
+    message = message + Pad((int)(hPa*10)); // Pressure
+    message = message + Pad((int)(density*10)); // Dust Density
   }
 
   else{ // create long message for serial output
@@ -190,19 +214,18 @@ String getWeather(boolean shrt){
     message = message + hPa;
     message = message + " hPa\t Dust Density: ";
     message = message + density;
-    message = message + " ug/m3\t Sealevel Pressure: ";  
-    message = message + p0;
-    message = message + " hPa, \n";
+    message = message + " ug/m3\n";
   }
   return message;
 }
 
 // Byte Padding to 4 Byte
-string Pad(string message){
+String Pad(int input){
+      String message = (String)input;
      if(message.length()<4){
       message=0+message;
     } else if(message.length()>4){
-      message = message.substr(0,4)
+      message = message.substring(0,4);
     }
     return message;
 }
@@ -236,7 +259,7 @@ int Filter(int m){
   }
 }
 
-void sendStringAndGetResponse(String str) {
+boolean sendStringAndGetResponse(String str) {
   SigFox.begin();
   delay(100);
   SigFox.status();
@@ -246,21 +269,22 @@ void sendStringAndGetResponse(String str) {
   int ret = SigFox.endPacket(true);
   if (ret > 0) {
     Serial.println("No transmission");
+    Serial.println();
+    SigFox.end();
+    return false;
   } else {
     Serial.println("Transmission ok");
   }
+  if (ONESHOT==true){
+    if (SigFox.parsePacket()) {
+    Serial.println("Response from server:");
+    while (SigFox.available()) {
+      //Serial.print("0x");
+      Serial.println(SigFox.read(),HEX);
+    }
+  }
+  }
   Serial.println();
   SigFox.end();
-  return;
-}
-
-
-
-
-
-
-
-// needed for BUG FIX of LowPower Sleep
-void alarmEvent0() {
-  alarm_source = 0;
+  return true;
 }
