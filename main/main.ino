@@ -1,21 +1,9 @@
-/*
-  Needed Components:
-  ----
-  Board: Arduino MKR Fox 1200
-
-  ----
-  Temperature and Humidity: DHT 22 / Digital Pin 2
-  Pressure: BMP 810
-  Dust: Sharp gp2y1010au0f
-
-*/
-
 #include <DHT.h>
 #include <SigFox.h>
 #include <ArduinoLowPower.h>
 #include <SFE_BMP180.h>
 #include <Wire.h>
-#include <SDS011-select-serial.h>
+
 
 SFE_BMP180 PRESSURESENSOR;
 #define ALTITUDE 250.0 //Stuttgart Center
@@ -34,7 +22,7 @@ SFE_BMP180 PRESSURESENSOR;
 #define DEBUG false // true if debugging, this means no loop! it enables debug inputs and wait for serial
 
 DHT dht(DHTPIN, DHTTYPE);
-SDS011 my_sds(Serial1);
+
 
 volatile int alarm_source = 0;
 void alarmEvent0()
@@ -116,11 +104,12 @@ String getWeather()
   digitalWrite(DHTVCC, HIGH);
   delay(2000);
   dht.begin();
+  delay(2000);
   float humidity = dht.readHumidity();
   digitalWrite(DHTVCC, LOW);
 
   // read dust
-  float density = getDust();
+  float density = 0;
 
   if (humidity != humidity)
   { // nan value chacking
@@ -135,29 +124,14 @@ String getWeather()
     density = 0;
   }
   // create short message for sigfox delivery
-  Serial.println("PHumidity: " + String(humidity));
+  Serial.println("Humidity: " + String(humidity));
   Serial.println("Pressure: " + String(pressure));
   Serial.println("Density: " + String(density));
   message = message + Pad((int)(humidity * 10)); // Humidity
-  message = message + Pad((int)(pressure * 10)); // Pressure
+  message = message + Pad((int)(pressure)); // Pressure
   message = message + Pad((int)(density * 10));  // Dust Density
 
   return message;
-}
-
-float getDust()
-{
-  float p10, p25;
-  int error;
-  Serial1.begin(9600);
-  delay(1000);
-  error = my_sds.read(&p25, &p10);
-  if (! error) {
-    Serial.println("P2.5: " + String(p25));
-    Serial.println("P10:  " + String(p10));
-  }
-  delay(1000);
-  return p10;
 }
 
 double getPressure()
@@ -165,25 +139,24 @@ double getPressure()
   digitalWrite(BMPVCC, HIGH);
   delay(2000);
   PRESSURESENSOR.begin();
-
+  delay(2000);
   char status;
-  double T, P, p0, a, hPa;
+  double T, P, hPa;
   status = PRESSURESENSOR.startTemperature();
+  delay(status);
   if (status != 0)
   {
-    delay(1000);
     status = PRESSURESENSOR.getTemperature(T);
     if (status != 0)
     {
       status = PRESSURESENSOR.startPressure(3);
+      delay(status);
       if (status != 0)
       {
-        delay(1000);
         status = PRESSURESENSOR.getPressure(P, T);
         if (status != 0)
         {
-          p0 = PRESSURESENSOR.sealevel(P, ALTITUDE);
-          hPa = p0 / 100;
+          hPa = PRESSURESENSOR.sealevel(P, ALTITUDE);
         }
       }
     }
