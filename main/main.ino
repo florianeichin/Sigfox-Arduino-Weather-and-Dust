@@ -4,7 +4,6 @@
 #include <SFE_BMP180.h>
 #include <Wire.h>
 
-
 SFE_BMP180 PRESSURESENSOR;
 #define ALTITUDE 250.0 //Stuttgart Center
 
@@ -18,11 +17,9 @@ SFE_BMP180 PRESSURESENSOR;
 #define SLEEPTIME 1000 * 60 * 15 // 15 Minutes
 #define DHTTYPE DHT22
 
-
 #define DEBUG false // true if debugging, this means no loop! it enables debug inputs and wait for serial
 
 DHT dht(DHTPIN, DHTTYPE);
-
 
 volatile int alarm_source = 0;
 void alarmEvent0()
@@ -42,7 +39,6 @@ void setup()
   // making DHT and BMP VCC Pins
   pinMode(DHTVCC, OUTPUT);
   pinMode(BMPVCC, OUTPUT);
-
 
   Serial.begin(9600);
   delay(2000);
@@ -91,12 +87,8 @@ void loop()
   }
 }
 
-
-
 String getWeather()
 {
-  String message = "";
-
   // read pressure
   double pressure = getPressure();
 
@@ -105,7 +97,8 @@ String getWeather()
   dht.begin();
   delay(2000);
   float humidity = dht.readHumidity();
-
+  delay(2000);
+  float temperature = dht.readTemperature();
   // read dust
   float density = 0;
 
@@ -113,22 +106,39 @@ String getWeather()
   { // nan value chacking
     humidity = 1;
   }
+  
+  humidity = humidity * 10;
+  char humidityHex[3];
+  sprintf(humidityHex, "%03x", int(humidity));
+    if (temperature != temperature)
+  { // nan value chacking
+    temperature = 1;
+  }
+  temperature = (temperature + 50) * 10;
+  char temperatureHex[3];
+  sprintf(temperatureHex, "%03x", int(temperature));
+
   if (pressure != pressure)
   { // nan value chacking
     pressure = 1;
   }
+  char pressureHex[3];
+  sprintf(pressureHex, "%03x", int(pressure));
   if (density != density)
   { // if nan value
     density = 1;
   }
+  density = density * 10;
+  char densityHex[3];
+  sprintf(densityHex, "%03x", int(density));
   // create short message for sigfox delivery
-  Serial.println("Humidity: " + String(humidity));
-  Serial.println("Pressure: " + String(pressure));
-  Serial.println("Density: " + String(density));
-  message = message + Pad((int)(humidity * 10)); // Humidity
-  message = message + Pad((int)(pressure)); // Pressure
-  message = message + Pad((int)(density * 10));  // Dust Density
-
+  Serial.println("Humidity: " + String(humidity)+ " hex:" + String(humidityHex));
+  Serial.println("Pressure: " + String(pressure)+ " hex:" + String(pressureHex));
+  Serial.println("Density: " + String(density)+ " hex:" + String(densityHex));
+  Serial.println("Temprerature: " + String(temperature)+ " hex:" + String(temperatureHex));
+  char message[12];
+  sprintf(message,"%s%s%s%s",humidityHex , pressureHex ,densityHex ,temperatureHex);
+ 
   return message;
 }
 
@@ -162,21 +172,6 @@ double getPressure()
   digitalWrite(BMPVCC, LOW);
 
   return hPa;
-}
-
-// Byte Padding to 4 Byte
-String Pad(int input)
-{
-  String message = (String)input;
-  while (message.length() < 4)
-  {
-    message = 0 + message;
-  }
-  if (message.length() > 4)
-  {
-    message = "2222";
-  }
-  return message;
 }
 
 
