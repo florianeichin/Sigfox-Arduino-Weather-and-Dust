@@ -101,27 +101,25 @@ String getWeather()
   double pressure = getPressure();
 
   // read Humidity
-  digitalWrite(DHTVCC, HIGH);
-  delay(2000);
+
   dht.begin();
   delay(2000);
   float humidity = dht.readHumidity();
-  digitalWrite(DHTVCC, LOW);
 
   // read dust
   float density = 0;
 
   if (humidity != humidity)
   { // nan value chacking
-    humidity = 0;
+    humidity = 1;
   }
   if (pressure != pressure)
   { // nan value chacking
-    pressure = 0;
+    pressure = 1;
   }
   if (density != density)
   { // if nan value
-    density = 0;
+    density = 1;
   }
   // create short message for sigfox delivery
   Serial.println("Humidity: " + String(humidity));
