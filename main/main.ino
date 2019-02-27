@@ -96,7 +96,8 @@ String getWeather()
 
   dht.begin();
   delay(2000);
-  float humidity = dht.readHumidity();
+  //float humidity = dht.readHumidity();
+  float humidity = 0;
   delay(2000);
   float temperature = dht.readTemperature();
   // read dust
@@ -104,7 +105,7 @@ String getWeather()
 
   if (humidity != humidity)
   { // nan value chacking
-    humidity = 1;
+    humidity = 0;
   }
   
   humidity = humidity * 10;
@@ -112,7 +113,7 @@ String getWeather()
   sprintf(humidityHex, "%03x", int(humidity));
     if (temperature != temperature)
   { // nan value chacking
-    temperature = 1;
+    temperature = 0;
   }
   temperature = (temperature + 50) * 10;
   char temperatureHex[3];
@@ -120,13 +121,13 @@ String getWeather()
 
   if (pressure != pressure)
   { // nan value chacking
-    pressure = 1;
+    pressure = 0;
   }
   char pressureHex[3];
   sprintf(pressureHex, "%03x", int(pressure));
   if (density != density)
   { // if nan value
-    density = 1;
+    density = 0;
   }
   density = density * 10;
   char densityHex[3];
